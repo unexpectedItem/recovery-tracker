@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1f2937" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Recovery Tracker" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Recovery Tracker</title>
+  <style>
+    :root {
+      --bg:#f6f7f8; --card:#ffffff; --text:#17202a; --muted:#667085;
+      --border:#d9dee7; --accent:#355c7d; --accent2:#eaf0f5; --danger:#9b2c2c;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#111418; --card:#191e24; --text:#f2f4f7; --muted:#a8b0bb; --border:#303843; --accent:#7aa7cf; --accent2:#23303c; --danger:#ff8d8d; }
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width:760px; margin:0 auto; padding:18px 14px 40px; }
+    h1 { font-size:26px; margin:4px 0 6px; }
+    h2 { font-size:18px; margin:0 0 10px; }
+    h3 { font-size:15px; margin:0 0 8px; }
+    p { line-height:1.45; }
+    .sub { color:var(--muted); margin:0 0 16px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin:12px 0; }
+    label, legend { font-weight:600; font-size:14px; }
+    .field { margin:14px 0; }
+    input, textarea, select, button { font:inherit; }
+    input[type="date"], input[type="number"], input[type="text"], textarea, select { width:100%; min-height:46px; border:1px solid var(--border); border-radius:12px; padding:11px 12px; background:transparent; color:var(--text); font-size:16px; }
+    textarea { min-height:84px; resize:vertical; }
+    input[type="range"] { width:100%; }
+    .rangeRow { display:grid; grid-template-columns:1fr 52px; gap:10px; align-items:center; }
+    .pill { min-height:46px; display:grid; place-items:center; border-radius:12px; background:var(--accent2); font-weight:700; font-size:18px; }
+    .radios { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .radioBox { display:flex; align-items:center; gap:9px; min-height:46px; padding:10px 12px; border:1px solid var(--border); border-radius:12px; }
+    .hint { color:var(--muted); font-size:13px; margin-top:5px; }
+    button { min-height:46px; border:0; border-radius:12px; padding:11px 14px; font-weight:700; cursor:pointer; }
+    .primary { width:100%; background:var(--accent); color:white; }
+    .secondary { background:var(--accent2); color:var(--text); }
+    .danger { background:transparent; color:var(--danger); border:1px solid var(--border); }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .metric { border:1px solid var(--border); border-radius:12px; padding:12px; }
+    .metric small { color:var(--muted); display:block; }
+    .metric strong { font-size:21px; display:block; margin-top:4px; }
+    .entries { display:grid; gap:10px; }
+    .entry { border:1px solid var(--border); border-radius:14px; padding:12px; }
+    .entryTop { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .date { font-weight:700; }
+    .grid4 { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:10px; }
+    .mini { background:var(--accent2); border-radius:10px; padding:9px; min-width:0; }
+    .mini small { color:var(--muted); display:block; }
+    .mini strong { overflow-wrap:anywhere; }
+    .note { margin-top:10px; color:var(--muted); white-space:pre-wrap; }
+    .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+    .tag { font-size:12px; color:var(--muted); border:1px solid var(--border); border-radius:999px; padding:5px 8px; }
+    .empty { color:var(--muted); text-align:center; padding:12px; }
+    .status { color:var(--muted); font-size:13px; margin-top:8px; min-height:20px; }
+    .install { background:var(--accent2); }
+    .weeklyBox { white-space:pre-wrap; line-height:1.5; background:var(--accent2); border-radius:12px; padding:12px; font-size:14px; }
+    .split { display:grid; grid-template-columns:1fr; gap:12px; }
+    .groundingDetails[hidden] { display:none; }
+    canvas { width:100%; height:180px; display:block; border-radius:12px; background:transparent; }
+    .loginWrap { max-width:460px; margin:0 auto; padding:48px 14px; }
+    .loginWrap h1 { margin-top:0; }
+    .topbar { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; }
+    .topbar .titles { min-width:0; }
+    .topbar button { flex:0 0 auto; }
+    .securityNote { font-size:13px; color:var(--muted); }
+    .migration[hidden] { display:none; }
+    .scoreLabel { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .scoreDelta { font-size:13px; color:var(--muted); }
+    .reflectionText { margin-top:10px; white-space:pre-wrap; }
+    @media (min-width:640px) { .grid4 { grid-template-columns:repeat(4,1fr); } .split { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+<section id="loginGate" class="loginWrap">
+  <div class="card">
+    <h1>Recovery Tracker</h1>
+    <p class="sub">Enter your app password to open your tracker.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" minlength="8" required style="width:100%;min-height:46px;border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:transparent;color:var(--text);font-size:16px" />
+      </div>
+      <button class="primary" type="submit">Unlock</button>
+      <div id="loginStatus" class="status" aria-live="polite"></div>
+    </form>
+    <p class="securityNote">The password is checked by the authentication service and is not stored in this website's source code. The app locks again after 15 minutes of inactivity.</p>
+  </div>
+</section>
+
+<main id="app" hidden>
+  <div class="topbar">
+    <div class="titles">
+      <h1>Recovery Tracker</h1>
+      <p class="sub">Track fear, recovery, sleep, avoidance, triggers and whether grounding helps. One entry a day is enough.</p>
+    </div>
+    <button id="lockApp" type="button" class="secondary">Lock</button>
+  </div>
+
+  <section class="card install">
+    <h2>Cloud-backed and access-controlled</h2>
+    <p class="sub" style="margin-bottom:0">Entries are stored in your Supabase database and can only be read or changed by your authenticated app user. Export periodic backups as an extra precaution.</p>
+  </section>
+
+  <section id="migrationCard" class="card migration" hidden>
+    <h2>Older on-device entries found</h2>
+    <p id="migrationText" class="sub">This device contains entries from the earlier browser-only version.</p>
+    <button id="importLegacy" type="button" class="secondary">Import them to the database</button>
+    <div id="migrationStatus" class="status" aria-live="polite"></div>
+  </section>
+
+  <form id="form" class="card">
+    <h2>Daily check-in</h2>
+    <div class="field">
+      <label for="date">Date</label>
+      <input id="date" type="date" required />
+    </div>
+
+    <div class="field">
+      <label for="fear">Peak fear today</label>
+      <div class="rangeRow">
+        <input id="fear" type="range" min="0" max="10" step="1" value="5" />
+        <div id="fearOut" class="pill">5</div>
+      </div>
+      <div class="hint">0 = none · 10 = overwhelming</div>
+    </div>
+
+    <div class="field">
+      <label for="recovery">How long did the worst wave take to settle?</label>
+      <input id="recovery" type="number" inputmode="numeric" min="0" max="1440" step="1" placeholder="Minutes, e.g. 20" required />
+    </div>
+
+    <div class="field">
+      <label for="sleep">Sleep last night</label>
+      <input id="sleep" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="Hours, e.g. 6.5" required />
+    </div>
+
+    <fieldset class="field" style="border:0;padding:0;margin-left:0;margin-right:0">
+      <legend>Did you avoid anything because of fear or grief?</legend>
+      <div class="radios">
+        <label class="radioBox"><input type="radio" name="avoid" value="No" checked /> No</label>
+        <label class="radioBox"><input type="radio" name="avoid" value="Yes" /> Yes</label>
+      </div>
+    </fieldset>
+
+    <div class="split">
+      <div class="field" style="margin:0">
+        <label for="trigger">Main trigger for the hardest wave</label>
+        <select id="trigger">
+          <option value="Unclear / no obvious trigger">Unclear / no obvious trigger</option>
+          <option value="Photo or video">Photo or video</option>
+          <option value="Memory or thought">Memory or thought</option>
+          <option value="Place or route">Place or route</option>
+          <option value="Expecting Darrell to be there">Expecting Darrell to be there</option>
+          <option value="Routine or household reminder">Routine or household reminder</option>
+          <option value="Admin or practical task">Admin or practical task</option>
+          <option value="Conversation or person">Conversation or person</option>
+          <option value="Dream or waking">Dream or waking</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label for="waveTime">When was the hardest wave?</label>
+        <select id="waveTime">
+          <option value="Morning">Morning</option>
+          <option value="Afternoon">Afternoon</option>
+          <option value="Evening">Evening</option>
+          <option value="Night">Night</option>
+          <option value="Varied / multiple">Varied / multiple</option>
+        </select>
+      </div>
+    </div>
+
+    <fieldset class="field" style="border:0;padding:0;margin-left:0;margin-right:0">
+      <legend>Did you use grounding for the hardest wave?</legend>
+      <div class="radios">
+        <label class="radioBox"><input type="radio" name="grounded" value="No" checked /> No</label>
+        <label class="radioBox"><input type="radio" name="grounded" value="Yes" /> Yes</label>
+      </div>
+    </fieldset>
+
+    <div id="groundingDetails" class="groundingDetails" hidden>
+      <div class="split">
+        <div class="field" style="margin-top:0">
+          <label for="groundingType">Main grounding method</label>
+          <select id="groundingType">
+            <option value="Slow exhale breathing">Slow exhale breathing</option>
+            <option value="Feet / physical contact">Feet / physical contact</option>
+            <option value="3-2-1 orienting">3-2-1 orienting</option>
+            <option value="Cold sensation">Cold sensation</option>
+            <option value="Combination">Combination</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field" style="margin-top:0">
+          <label for="fearAfter">Fear after grounding</label>
+          <input id="fearAfter" type="number" inputmode="numeric" min="0" max="10" step="1" placeholder="0–10" />
+          <div class="hint">Optional. This lets the app estimate whether grounding is helping.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="note">Optional context</label>
+      <textarea id="note" maxlength="500" placeholder="Example: A photo appeared. Fear rose to 7, grounding brought it down to 5. Then I continued with what I was doing."></textarea>
+    </div>
+
+    <button class="primary" type="submit">Save today's entry</button>
+    <div id="status" class="status" aria-live="polite"></div>
+  </form>
+
+  <section class="card" id="readingSection">
+    <h2>Reading & grief reflection</h2>
+    <p class="sub">Use this after a chapter or section. Record what it explained about your experience, then compare how you felt immediately before and after reading.</p>
+    <form id="readingForm">
+      <div class="split">
+        <div class="field" style="margin-top:0">
+          <label for="readDate">Date</label>
+          <input id="readDate" type="date" required />
+        </div>
+        <div class="field" style="margin-top:0">
+          <label for="bookTitle">Book</label>
+          <input id="bookTitle" type="text" maxlength="200" value="The Grieving Brain" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="chapterLabel">Chapter / section</label>
+        <input id="chapterLabel" type="text" maxlength="200" placeholder="Example: Chapter 2 — Here, Now, Close" required />
+      </div>
+
+      <div class="field">
+        <label for="chapterExplains">What did this explain about what I am experiencing?</label>
+        <textarea id="chapterExplains" maxlength="2000" placeholder="Write the idea in your own words and how it maps onto your experience with Darrell." required></textarea>
+      </div>
+
+      <div class="split">
+        <div class="field" style="margin-top:0">
+          <div class="scoreLabel"><label for="readFearBefore">Fear before reading</label><span class="scoreDelta"><span id="readFearBeforeOut">5</span>/10</span></div>
+          <input id="readFearBefore" type="range" min="0" max="10" step="1" value="5" />
+          <div class="hint">0 = none · 10 = overwhelming</div>
+        </div>
+        <div class="field" style="margin-top:0">
+          <div class="scoreLabel"><label for="readFearAfter">Fear after reading</label><span class="scoreDelta"><span id="readFearAfterOut">5</span>/10</span></div>
+          <input id="readFearAfter" type="range" min="0" max="10" step="1" value="5" />
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="field" style="margin-top:0">
+          <div class="scoreLabel"><label for="groundingBefore">Grounded / present before</label><span class="scoreDelta"><span id="groundingBeforeOut">5</span>/10</span></div>
+          <input id="groundingBefore" type="range" min="0" max="10" step="1" value="5" />
+          <div class="hint">0 = very ungrounded · 10 = very present and steady</div>
+        </div>
+        <div class="field" style="margin-top:0">
+          <div class="scoreLabel"><label for="groundingAfter">Grounded / present after</label><span class="scoreDelta"><span id="groundingAfterOut">5</span>/10</span></div>
+          <input id="groundingAfter" type="range" min="0" max="10" step="1" value="5" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="readingDiscussion">Optional: something to discuss with Richard / a clinician</label>
+        <textarea id="readingDiscussion" maxlength="1000" placeholder="A question, a reaction, or something you want to test in therapy."></textarea>
+      </div>
+
+      <div class="hint" style="margin-bottom:12px">Before/after scores show what changed around that reading session. They do not prove that the chapter caused the change.</div>
+      <button class="primary" type="submit">Save reading reflection</button>
+      <div id="readingStatus" class="status" aria-live="polite"></div>
+    </form>
+
+    <div style="margin-top:18px">
+      <h3>Reading pattern</h3>
+      <div id="readingSummary" class="summary"></div>
+    </div>
+
+    <div class="entryTop" style="margin-top:18px">
+      <h3>Reflections</h3>
+      <button id="exportReadingCsv" type="button" class="secondary">Export reading CSV</button>
+    </div>
+    <div id="readingEntries" class="entries"></div>
+  </section>
+
+  <section class="card">
+    <h2>Running summary</h2>
+    <div id="summary" class="summary"></div>
+  </section>
+
+  <section class="card">
+    <div class="entryTop">
+      <div>
+        <h2>Weekly session summary</h2>
+        <p class="sub" style="margin-bottom:0">Automatically summarises the most recent 7 days of entries for a therapy or counselling session.</p>
+      </div>
+    </div>
+    <div id="weeklySummary" class="weeklyBox">Add entries to build a weekly summary.</div>
+    <div class="actions">
+      <button id="downloadWeekly" type="button" class="secondary">Download weekly summary</button>
+      <button id="copyWeekly" type="button" class="secondary">Copy summary</button>
+    </div>
+    <div id="weeklyStatus" class="status" aria-live="polite"></div>
+  </section>
+
+  <section class="card">
+    <h2>Fear trend</h2>
+    <canvas id="chart" width="720" height="180" aria-label="Peak fear trend chart"></canvas>
+    <div class="hint">The aim is not a perfectly smooth decline. Look at the direction over weeks, not individual days.</div>
+  </section>
+
+  <section class="card">
+    <div class="entryTop">
+      <h2>Entries</h2>
+      <div class="actions" style="margin-top:0">
+        <button id="exportCsv" type="button" class="secondary">Export CSV</button>
+        <button id="backupJson" type="button" class="secondary">Backup</button>
+        <button id="restoreJson" type="button" class="secondary">Restore</button>
+        <input id="restoreFile" type="file" accept="application/json,.json" hidden />
+      </div>
+    </div>
+    <div id="entries" class="entries"></div>
+    <div class="actions">
+      <button id="clearAll" type="button" class="danger">Clear all data</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What the measures tell us</h2>
+    <p class="sub" style="margin-bottom:0"><strong>Peak fear</strong> tracks intensity. <strong>Recovery time</strong> tracks how quickly your nervous system settles. <strong>Sleep</strong> affects emotional regulation. <strong>Avoidance</strong> shows whether grief is shrinking your life. <strong>Triggers</strong> reveal patterns. <strong>Grounding response</strong> shows whether the techniques are reducing physiological escalation.</p>
+  </section>
+</main>
+<script src="./config.js"></script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const cfg = window.RECOVERY_TRACKER_CONFIG || {};
+const loginGate = document.getElementById('loginGate');
+const app = document.getElementById('app');
+const loginForm = document.getElementById('loginForm');
+const passwordInput = document.getElementById('password');
+const loginStatus = document.getElementById('loginStatus');
+const isConfigured = cfg.supabaseUrl && cfg.publishableKey && cfg.loginEmail && !String(cfg.supabaseUrl).includes('YOUR_') && !String(cfg.publishableKey).includes('YOUR_') && !String(cfg.loginEmail).includes('YOUR_');
+
+if (!isConfigured) {
+  loginForm.querySelector('button').disabled = true;
+  loginStatus.textContent = 'Setup is not complete yet. Fill in config.js using the README instructions.';
+}
+
+const client = isConfigured ? createClient(cfg.supabaseUrl, cfg.publishableKey, {
+  auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: false }
+}) : null;
+
+let currentUser = null;
+let entries = [];
+let reflections = [];
+let lockTimer = null;
+let lastActivity = Date.now();
+const AUTO_LOCK_MS = 15 * 60 * 1000;
+
+function scheduleLock() {
+  lastActivity = Date.now();
+  if (lockTimer) clearTimeout(lockTimer);
+  if (!currentUser) return;
+  lockTimer = setTimeout(() => lockAppNow('Locked after 15 minutes of inactivity.'), AUTO_LOCK_MS);
+}
+['pointerdown','keydown','touchstart'].forEach(type => document.addEventListener(type, () => { if (currentUser) scheduleLock(); }, {passive:true}));
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && currentUser && Date.now() - lastActivity >= AUTO_LOCK_MS) lockAppNow('Locked after 15 minutes of inactivity.');
+});
+
+async function lockAppNow(message='Locked.') {
+  if (lockTimer) clearTimeout(lockTimer);
+  lockTimer = null;
+  if (client && currentUser) { try { await client.auth.signOut({scope:'local'}); } catch {} }
+  currentUser = null;
+  entries = [];
+  reflections = [];
+  app.hidden = true;
+  loginGate.hidden = false;
+  passwordInput.value = '';
+  loginStatus.textContent = message;
+  passwordInput.focus();
+}
+
+document.getElementById('lockApp').addEventListener('click', () => lockAppNow('Locked.'));
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!client) return;
+  const password = passwordInput.value;
+  loginStatus.textContent = 'Checking…';
+  const { data, error } = await client.auth.signInWithPassword({ email: cfg.loginEmail, password });
+  passwordInput.value = '';
+  if (error || !data.user) {
+    loginStatus.textContent = 'Password not accepted. Check it and try again.';
+    return;
+  }
+  currentUser = data.user;
+  loginStatus.textContent = '';
+  loginGate.hidden = true;
+  app.hidden = false;
+  scheduleLock();
+  await window.loadEntries();
+  await window.loadReadingReflections?.();
+  window.showLegacyMigration?.();
+  window.scrollTo({top:0, behavior:'auto'});
+});
+
+(() => {
+  const LEGACY_KEY = 'recoveryTracker.v1';
+  const $ = id => document.getElementById(id);
+  const form = $('form'), date = $('date'), fear = $('fear'), fearOut = $('fearOut');
+  const recovery = $('recovery'), sleep = $('sleep'), note = $('note'), status = $('status');
+  const trigger = $('trigger'), waveTime = $('waveTime'), groundingDetails = $('groundingDetails');
+  const groundingType = $('groundingType'), fearAfter = $('fearAfter');
+  const entriesEl = $('entries'), summaryEl = $('summary'), chart = $('chart');
+  const weeklySummaryEl = $('weeklySummary'), weeklyStatus = $('weeklyStatus');
+  const migrationCard = $('migrationCard'), migrationText = $('migrationText'), migrationStatus = $('migrationStatus');
+  const readingForm = $('readingForm'), readDate = $('readDate'), bookTitle = $('bookTitle'), chapterLabel = $('chapterLabel');
+  const chapterExplains = $('chapterExplains'), readingDiscussion = $('readingDiscussion'), readingStatus = $('readingStatus');
+  const readFearBefore = $('readFearBefore'), readFearAfter = $('readFearAfter'), groundingBefore = $('groundingBefore'), groundingAfter = $('groundingAfter');
+  const readFearBeforeOut = $('readFearBeforeOut'), readFearAfterOut = $('readFearAfterOut'), groundingBeforeOut = $('groundingBeforeOut'), groundingAfterOut = $('groundingAfterOut');
+  const readingEntriesEl = $('readingEntries'), readingSummaryEl = $('readingSummary');
+
+  function todayISO(){ const d=new Date(); const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+  date.value = todayISO();
+  readDate.value = todayISO();
+  fear.addEventListener('input', () => fearOut.textContent = fear.value);
+  [[readFearBefore,readFearBeforeOut],[readFearAfter,readFearAfterOut],[groundingBefore,groundingBeforeOut],[groundingAfter,groundingAfterOut]].forEach(([input,out]) => {
+    input.addEventListener('input', () => out.textContent = input.value);
+  });
+
+  function updateGroundingUI(){
+    const yes = document.querySelector('input[name="grounded"]:checked')?.value === 'Yes';
+    groundingDetails.hidden = !yes;
+    if (!yes) fearAfter.value = '';
+  }
+  document.querySelectorAll('input[name="grounded"]').forEach(r=>r.addEventListener('change', updateGroundingUI));
+  updateGroundingUI();
+
+  function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function fmtDate(iso){ const [y,m,d]=iso.split('-').map(Number); return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,d))); }
+  function avg(arr, key){ return arr.length ? arr.reduce((s,e)=>s+Number(e[key]||0),0)/arr.length : 0; }
+  function isoToUTC(iso){ const [y,m,d]=iso.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)); }
+  function daysBetween(a,b){ return Math.round((isoToUTC(b)-isoToUTC(a))/86400000); }
+  function mode(arr){
+    if(!arr.length) return null;
+    const counts=new Map();
+    arr.forEach(v=>{ if(v) counts.set(v,(counts.get(v)||0)+1); });
+    let best=null,bestN=0;
+    counts.forEach((n,v)=>{ if(n>bestN){best=v;bestN=n;} });
+    return best ? {value:best,count:bestN} : null;
+  }
+
+  function normalized(e){
+    return {
+      ...e,
+      trigger: e.trigger || 'Not recorded',
+      waveTime: e.waveTime || 'Not recorded',
+      grounded: e.grounded || 'Not recorded',
+      groundingType: e.groundingType || '',
+      fearAfter: Number.isFinite(Number(e.fearAfter)) && e.fearAfter !== null && e.fearAfter !== '' ? Number(e.fearAfter) : null
+    };
+  }
+
+  function dbToEntry(r){
+    return normalized({
+      date:r.entry_date, fear:Number(r.fear), recovery:Number(r.recovery_minutes), sleep:Number(r.sleep_hours),
+      avoidance:r.avoidance ? 'Yes':'No', trigger:r.trigger || '', waveTime:r.wave_time || '',
+      grounded:r.grounded ? 'Yes':'No', groundingType:r.grounding_type || '',
+      fearAfter:r.fear_after === null ? null : Number(r.fear_after), note:r.note || '', ts:Number(r.client_ts || 0)
+    });
+  }
+
+  function entryToDb(raw){
+    const e = normalized(raw);
+    return {
+      user_id: currentUser.id, entry_date:e.date, fear:Number(e.fear), recovery_minutes:Number(e.recovery),
+      sleep_hours:Number(e.sleep), avoidance:e.avoidance==='Yes', trigger:e.trigger==='Not recorded' ? null : e.trigger,
+      wave_time:e.waveTime==='Not recorded' ? null : e.waveTime, grounded:e.grounded==='Yes',
+      grounding_type:e.grounded==='Yes' ? (e.groundingType || null) : null,
+      fear_after:e.grounded==='Yes' && e.fearAfter!==null ? Number(e.fearAfter) : null,
+      note:e.note || null, client_ts:Number(e.ts || Date.now()), updated_at:new Date().toISOString()
+    };
+  }
+
+  async function loadEntries(){
+    if(!currentUser) return;
+    status.textContent = 'Loading entries…';
+    const {data,error} = await client.from('recovery_entries')
+      .select('entry_date,fear,recovery_minutes,sleep_hours,avoidance,trigger,wave_time,grounded,grounding_type,fear_after,note,client_ts')
+      .order('entry_date',{ascending:true});
+    if(error){ status.textContent = 'Could not load the database. Check the Supabase setup and RLS policies.'; return; }
+    entries = (data || []).map(dbToEntry);
+    render();
+    status.textContent = '';
+  }
+  window.loadEntries = loadEntries;
+
+  function dbToReflection(r){
+    return {
+      id:Number(r.id), date:r.read_date, bookTitle:r.book_title || '', chapterLabel:r.chapter_label || '',
+      explanation:r.explanation || '', discussionNote:r.discussion_note || '',
+      fearBefore:Number(r.fear_before), fearAfter:Number(r.fear_after),
+      groundingBefore:Number(r.grounding_before), groundingAfter:Number(r.grounding_after),
+      ts:Number(r.client_ts || 0)
+    };
+  }
+
+  function reflectionToDb(r){
+    return {
+      user_id:currentUser.id, read_date:r.date, book_title:r.bookTitle.trim(), chapter_label:r.chapterLabel.trim(),
+      explanation:r.explanation.trim(), discussion_note:r.discussionNote.trim() || null,
+      fear_before:Number(r.fearBefore), fear_after:Number(r.fearAfter),
+      grounding_before:Number(r.groundingBefore), grounding_after:Number(r.groundingAfter),
+      client_ts:Number(r.ts || Date.now()), updated_at:new Date().toISOString()
+    };
+  }
+
+  async function loadReadingReflections(){
+    if(!currentUser) return;
+    readingStatus.textContent = 'Loading reflections…';
+    const {data,error} = await client.from('reading_reflections')
+      .select('id,read_date,book_title,chapter_label,explanation,discussion_note,fear_before,fear_after,grounding_before,grounding_after,client_ts')
+      .order('read_date',{ascending:true}).order('client_ts',{ascending:true});
+    if(error){ readingStatus.textContent = 'Could not load reading reflections. Re-run setup.sql in Supabase to add the reading table.'; return; }
+    reflections = (data || []).map(dbToReflection);
+    renderReading();
+    renderWeeklySummary();
+    readingStatus.textContent = '';
+  }
+  window.loadReadingReflections = loadReadingReflections;
+
+  readingForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    if(!currentUser) return;
+    const values=[readFearBefore,readFearAfter,groundingBefore,groundingAfter].map(x=>Number(x.value));
+    if(!readDate.value || !bookTitle.value.trim() || !chapterLabel.value.trim() || !chapterExplains.value.trim() || values.some(v=>!Number.isFinite(v)||v<0||v>10)){
+      readingStatus.textContent='Please complete the date, book, chapter, explanation and 0–10 scores.'; return;
+    }
+    const item={
+      date:readDate.value, bookTitle:bookTitle.value, chapterLabel:chapterLabel.value, explanation:chapterExplains.value, discussionNote:readingDiscussion.value,
+      fearBefore:values[0], fearAfter:values[1], groundingBefore:values[2], groundingAfter:values[3], ts:Date.now()
+    };
+    readingStatus.textContent='Saving…';
+    const {error}=await client.from('reading_reflections').insert(reflectionToDb(item));
+    if(error){ readingStatus.textContent='Save failed. Re-run setup.sql if the reading table has not been created yet.'; return; }
+    await loadReadingReflections();
+    chapterLabel.value=''; chapterExplains.value=''; readingDiscussion.value='';
+    [readFearBefore,readFearAfter,groundingBefore,groundingAfter].forEach(x=>x.value='5');
+    [readFearBeforeOut,readFearAfterOut,groundingBeforeOut,groundingAfterOut].forEach(x=>x.textContent='5');
+    readingStatus.textContent='Reading reflection saved.';
+  });
+
+  function signedDelta(n){ return `${n>0?'+':''}${n.toFixed(1)} pts`; }
+
+  function renderReading(){
+    const sorted=[...reflections].sort((a,b)=> b.date.localeCompare(a.date) || b.ts-a.ts);
+    if(!sorted.length){
+      readingEntriesEl.innerHTML='<div class="empty">No reading reflections yet.</div>';
+      readingSummaryEl.innerHTML='<div class="empty" style="grid-column:1/-1">Your reading pattern will appear after the first reflection.</div>';
+      return;
+    }
+    const fearChanges=sorted.map(r=>r.fearAfter-r.fearBefore);
+    const groundingChanges=sorted.map(r=>r.groundingAfter-r.groundingBefore);
+    const fearMean=fearChanges.reduce((a,b)=>a+b,0)/fearChanges.length;
+    const groundingMean=groundingChanges.reduce((a,b)=>a+b,0)/groundingChanges.length;
+    readingSummaryEl.innerHTML=`
+      <div class="metric"><small>Reflections</small><strong>${sorted.length}</strong></div>
+      <div class="metric"><small>Avg fear change after reading</small><strong>${signedDelta(fearMean)}</strong></div>
+      <div class="metric"><small>Avg groundedness change</small><strong>${signedDelta(groundingMean)}</strong></div>
+      <div class="metric"><small>Latest chapter</small><strong style="font-size:15px">${esc(sorted[0].chapterLabel)}</strong></div>`;
+    readingEntriesEl.innerHTML=sorted.map(r=>{
+      const fearDelta=r.fearAfter-r.fearBefore;
+      const groundingDelta=r.groundingAfter-r.groundingBefore;
+      return `<article class="entry">
+        <div class="entryTop"><div><div class="date">${esc(fmtDate(r.date))}</div><div class="hint">${esc(r.bookTitle)} · ${esc(r.chapterLabel)}</div></div><button class="danger" type="button" data-ref-del="${r.id}">Delete</button></div>
+        <div class="grid4">
+          <div class="mini"><small>Fear</small><strong>${r.fearBefore} → ${r.fearAfter}</strong><div class="hint">${signedDelta(fearDelta)}</div></div>
+          <div class="mini"><small>Grounded / present</small><strong>${r.groundingBefore} → ${r.groundingAfter}</strong><div class="hint">${signedDelta(groundingDelta)}</div></div>
+        </div>
+        <div class="reflectionText"><strong>What it explained</strong><div class="note" style="margin-top:5px">${esc(r.explanation)}</div></div>
+        ${r.discussionNote ? `<div class="reflectionText"><strong>For discussion</strong><div class="note" style="margin-top:5px">${esc(r.discussionNote)}</div></div>` : ''}
+      </article>`;
+    }).join('');
+    readingEntriesEl.querySelectorAll('[data-ref-del]').forEach(btn=>btn.addEventListener('click', async ()=>{
+      if(!currentUser) return;
+      const id=Number(btn.dataset.refDel);
+      const {error}=await client.from('reading_reflections').delete().eq('user_id',currentUser.id).eq('id',id);
+      if(error){readingStatus.textContent='Could not delete that reflection.';return;}
+      await loadReadingReflections();
+      readingStatus.textContent='Reading reflection deleted.';
+    }));
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if(!currentUser) return;
+    const rec = Number(recovery.value), slp = Number(sleep.value), f = Number(fear.value);
+    const grounded = document.querySelector('input[name="grounded"]:checked')?.value || 'No';
+    const afterRaw = fearAfter.value.trim();
+    const after = afterRaw === '' ? null : Number(afterRaw);
+    if (!date.value || !Number.isFinite(rec) || rec < 0 || rec > 1440 || !Number.isFinite(slp) || slp < 0 || slp > 24 || (after !== null && (!Number.isFinite(after) || after < 0 || after > 10))) {
+      status.textContent = 'Please check the date, recovery time, sleep and grounding values.'; return;
+    }
+    const item = {
+      date:date.value, fear:f, recovery:Math.round(rec), sleep:Math.round(slp*100)/100,
+      avoidance:document.querySelector('input[name="avoid"]:checked').value,
+      trigger:trigger.value, waveTime:waveTime.value, grounded,
+      groundingType: grounded==='Yes' ? groundingType.value : '',
+      fearAfter: grounded==='Yes' ? after : null,
+      note:note.value.trim(), ts:Date.now()
+    };
+    status.textContent = 'Saving…';
+    const {error} = await client.from('recovery_entries').upsert(entryToDb(item), {onConflict:'user_id,entry_date'});
+    if(error){ status.textContent = 'Save failed. Your previous database data was not changed.'; return; }
+    await loadEntries();
+    status.textContent = 'Entry saved to the database.';
+    recovery.value=''; sleep.value=''; note.value=''; fear.value='5'; fearOut.textContent='5';
+    document.querySelector('input[name="avoid"][value="No"]').checked=true;
+    document.querySelector('input[name="grounded"][value="No"]').checked=true;
+    trigger.value='Unclear / no obvious trigger'; waveTime.value='Morning'; fearAfter.value=''; updateGroundingUI();
+  });
+
+  function render(){
+    const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date)).map(normalized);
+    if(!sorted.length){ entriesEl.innerHTML='<div class="empty">No entries yet.</div>'; }
+    else entriesEl.innerHTML=sorted.map(e=>`<article class="entry">
+      <div class="entryTop"><div class="date">${esc(fmtDate(e.date))}</div><button class="danger" type="button" data-del="${esc(e.date)}">Delete</button></div>
+      <div class="grid4">
+        <div class="mini"><small>Peak fear</small><strong>${e.fear}/10</strong></div>
+        <div class="mini"><small>Recovery</small><strong>${e.recovery} min</strong></div>
+        <div class="mini"><small>Sleep</small><strong>${e.sleep} h</strong></div>
+        <div class="mini"><small>Avoided?</small><strong>${esc(e.avoidance)}</strong></div>
+      </div>
+      <div class="tags">
+        <span class="tag">Trigger: ${esc(e.trigger)}</span>
+        <span class="tag">Time: ${esc(e.waveTime)}</span>
+        <span class="tag">Grounding: ${esc(e.grounded)}${e.grounded==='Yes' && e.groundingType ? ' · '+esc(e.groundingType) : ''}${e.fearAfter!==null ? ' · after '+e.fearAfter+'/10' : ''}</span>
+      </div>
+      ${e.note ? `<div class="note">${esc(e.note)}</div>` : ''}
+    </article>`).join('');
+
+    entriesEl.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click', async ()=>{
+      if(!currentUser) return;
+      const targetDate=btn.dataset.del;
+      const {error}=await client.from('recovery_entries').delete().eq('user_id',currentUser.id).eq('entry_date',targetDate);
+      if(error){ status.textContent='Delete failed.'; return; }
+      await loadEntries();
+      status.textContent='Entry deleted.';
+    }));
+
+    const nEntries=entries.map(normalized);
+    if(!nEntries.length){ summaryEl.innerHTML='<div class="empty" style="grid-column:1/-1">Your summary will appear after the first entry.</div>'; }
+    else {
+      const avoid=nEntries.filter(e=>e.avoidance==='Yes').length;
+      const grounding=nEntries.filter(e=>e.grounded==='Yes');
+      const usableGrounding=grounding.filter(e=>e.fearAfter!==null);
+      const meanDrop=usableGrounding.length ? usableGrounding.reduce((s,e)=>s+(Number(e.fear)-e.fearAfter),0)/usableGrounding.length : null;
+      summaryEl.innerHTML=`
+        <div class="metric"><small>Avg peak fear</small><strong>${avg(nEntries,'fear').toFixed(1)}/10</strong></div>
+        <div class="metric"><small>Avg recovery</small><strong>${Math.round(avg(nEntries,'recovery'))} min</strong></div>
+        <div class="metric"><small>Avg sleep</small><strong>${avg(nEntries,'sleep').toFixed(1)} h</strong></div>
+        <div class="metric"><small>Avoidance days</small><strong>${avoid}/${nEntries.length}</strong></div>
+        <div class="metric"><small>Grounding used</small><strong>${grounding.length}/${nEntries.length}</strong></div>
+        <div class="metric"><small>Avg grounding change</small><strong>${meanDrop===null ? '—' : ((meanDrop>=0?'-':'+')+Math.abs(meanDrop).toFixed(1)+' pts')}</strong></div>`;
+    }
+    renderWeeklySummary();
+    drawChart();
+  }
+
+  function recentSeven(){
+    if(!entries.length) return [];
+    const sorted=[...entries].sort((a,b)=>a.date.localeCompare(b.date));
+    const end=sorted[sorted.length-1].date;
+    return sorted.filter(e=>daysBetween(e.date,end)>=0 && daysBetween(e.date,end)<=6).map(normalized);
+  }
+
+  function buildWeeklyText(){
+    const week=recentSeven();
+    if(!week.length) return 'Add entries to build a weekly summary.';
+    const start=week[0].date, end=week[week.length-1].date;
+    const avoid=week.filter(e=>e.avoidance==='Yes').length;
+    const grounding=week.filter(e=>e.grounded==='Yes');
+    const groundingWithAfter=grounding.filter(e=>e.fearAfter!==null);
+    const meanDrop=groundingWithAfter.length ? groundingWithAfter.reduce((s,e)=>s+(Number(e.fear)-e.fearAfter),0)/groundingWithAfter.length : null;
+    const topTrigger=mode(week.map(e=>e.trigger).filter(v=>v && v!=='Not recorded'));
+    const topTime=mode(week.map(e=>e.waveTime).filter(v=>v && v!=='Not recorded'));
+    const worst=[...week].sort((a,b)=>Number(b.fear)-Number(a.fear))[0];
+    const notes=week.filter(e=>e.note).slice(-3).map(e=>`${fmtDate(e.date)}: ${e.note}`);
+    const lines=[
+      `Recovery Tracker — 7-day session summary`,
+      `${fmtDate(start)} to ${fmtDate(end)} (${week.length} entr${week.length===1?'y':'ies'})`,
+      ``,
+      `Core measures`,
+      `• Average peak fear: ${avg(week,'fear').toFixed(1)}/10`,
+      `• Average recovery time: ${Math.round(avg(week,'recovery'))} minutes`,
+      `• Average sleep: ${avg(week,'sleep').toFixed(1)} hours`,
+      `• Avoidance recorded: ${avoid} of ${week.length} days`,
+      ``,
+      `Triggers and pattern`,
+      `• Most common trigger: ${topTrigger ? `${topTrigger.value} (${topTrigger.count} day${topTrigger.count===1?'':'s'})` : 'Not enough data'}`,
+      `• Most common time for the hardest wave: ${topTime ? `${topTime.value} (${topTime.count} day${topTime.count===1?'':'s'})` : 'Not enough data'}`,
+      `• Highest recorded fear: ${worst.fear}/10 on ${fmtDate(worst.date)}${worst.trigger && worst.trigger!=='Not recorded' ? ` — ${worst.trigger}` : ''}`,
+      ``,
+      `Grounding`,
+      `• Grounding used: ${grounding.length} of ${week.length} days`,
+      `• Average fear reduction when before/after was recorded: ${meanDrop===null ? 'Not enough before/after data' : `${meanDrop.toFixed(1)} points`}`,
+    ];
+    const weekReflections=reflections.filter(r=>r.date>=start && r.date<=end);
+    if(weekReflections.length){
+      const fearChange=weekReflections.reduce((s,r)=>s+(r.fearAfter-r.fearBefore),0)/weekReflections.length;
+      const groundingChange=weekReflections.reduce((s,r)=>s+(r.groundingAfter-r.groundingBefore),0)/weekReflections.length;
+      lines.push('', 'Reading reflections', `• Reflections recorded: ${weekReflections.length}`, `• Average fear change immediately after reading: ${signedDelta(fearChange)}`, `• Average groundedness change immediately after reading: ${signedDelta(groundingChange)}`);
+      weekReflections.slice(-3).forEach(r=>lines.push(`• ${r.chapterLabel}: ${r.explanation}`));
+    }
+    if(notes.length){ lines.push('', 'Recent context notes', ...notes.map(n=>'• '+n)); }
+    lines.push('', 'Questions / points to discuss in session', '• Which patterns matter clinically?', '• Is avoidance increasing, stable or reducing?', '• Are the grounding techniques being used appropriately?', '• Did any reading help explain a pattern or raise a useful therapy question?', '• What should I practise or monitor before the next session?');
+    return lines.join('\n');
+  }
+
+  function renderWeeklySummary(){ weeklySummaryEl.textContent=buildWeeklyText(); }
+
+  function drawChart(){
+    const ctx=chart.getContext('2d');
+    const css=getComputedStyle(document.documentElement); const text=css.getPropertyValue('--muted').trim()||'#667085'; const border=css.getPropertyValue('--border').trim()||'#d9dee7'; const accent=css.getPropertyValue('--accent').trim()||'#355c7d';
+    const w=chart.width,h=chart.height; ctx.clearRect(0,0,w,h);
+    ctx.font='12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'; ctx.fillStyle=text; ctx.strokeStyle=border; ctx.lineWidth=1;
+    const pad={l:34,r:12,t:12,b:24}, cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+    [0,5,10].forEach(v=>{ const y=pad.t+ch-(v/10)*ch; ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(String(v),8,y+4); });
+    const data=[...entries].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+    if(!data.length){ ctx.fillText('No data yet',pad.l+10,pad.t+30); return; }
+    const x=(i)=>pad.l+(data.length===1?cw/2:(i/(data.length-1))*cw); const y=(v)=>pad.t+ch-(v/10)*ch;
+    ctx.strokeStyle=accent; ctx.lineWidth=3; ctx.beginPath(); data.forEach((e,i)=>{ const px=x(i),py=y(e.fear); if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }); ctx.stroke();
+    ctx.fillStyle=accent; data.forEach((e,i)=>{ ctx.beginPath();ctx.arc(x(i),y(e.fear),4,0,Math.PI*2);ctx.fill(); });
+    ctx.fillStyle=text; ctx.fillText(data[0].date.slice(5),pad.l,h-6); if(data.length>1){ const t=data[data.length-1].date.slice(5); ctx.fillText(t,w-pad.r-34,h-6); }
+  }
+
+  function download(filename, text, type){ const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000); }
+
+  $('exportCsv').addEventListener('click',()=>{
+    const rows=[['Date','Peak fear','Recovery minutes','Sleep hours','Avoidance','Trigger','Hardest wave time','Grounding used','Grounding method','Fear after grounding','Context'],...[...entries].sort((a,b)=>a.date.localeCompare(b.date)).map(raw=>{const e=normalized(raw);return [e.date,e.fear,e.recovery,e.sleep,e.avoidance,e.trigger,e.waveTime,e.grounded,e.groundingType,e.fearAfter??'',e.note];})];
+    const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); download('recovery-tracker.csv',csv,'text/csv;charset=utf-8');
+  });
+  $('exportReadingCsv').addEventListener('click',()=>{
+    const rows=[['Date','Book','Chapter / section','What it explained','Fear before','Fear after','Fear change','Grounded before','Grounded after','Grounded change','For discussion'],...[...reflections].sort((a,b)=>a.date.localeCompare(b.date)).map(r=>[r.date,r.bookTitle,r.chapterLabel,r.explanation,r.fearBefore,r.fearAfter,r.fearAfter-r.fearBefore,r.groundingBefore,r.groundingAfter,r.groundingAfter-r.groundingBefore,r.discussionNote])];
+    const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); download('reading-grief-reflections.csv',csv,'text/csv;charset=utf-8');
+  });
+  $('backupJson').addEventListener('click',()=>download('recovery-tracker-backup.json',JSON.stringify({version:4,entries,reflections},null,2),'application/json'));
+  $('restoreJson').addEventListener('click',()=>$('restoreFile').click());
+  $('restoreFile').addEventListener('change', async ev=>{
+    const f=ev.target.files[0]; if(!f || !currentUser)return;
+    try{
+      const obj=JSON.parse(await f.text());
+      if(!obj||!Array.isArray(obj.entries)) throw new Error();
+      const valid=obj.entries.filter(e=>e && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date||'')));
+      const validReflections=Array.isArray(obj.reflections) ? obj.reflections.filter(r=>r && /^\d{4}-\d{2}-\d{2}$/.test(String(r.date||'')) && r.chapterLabel && r.explanation) : [];
+      if(valid.length){
+        const {error}=await client.from('recovery_entries').upsert(valid.map(entryToDb), {onConflict:'user_id,entry_date'});
+        if(error) throw error;
+      }
+      if(validReflections.length){
+        const {error}=await client.from('reading_reflections').upsert(validReflections.map(reflectionToDb), {onConflict:'user_id,client_ts'});
+        if(error) throw error;
+      }
+      if(!valid.length && !validReflections.length) throw new Error();
+      await loadEntries(); await loadReadingReflections();
+      status.textContent=`Restored ${valid.length} daily entr${valid.length===1?'y':'ies'} and ${validReflections.length} reading reflection${validReflections.length===1?'':'s'}.`;
+    }catch{status.textContent='That backup file could not be restored.';}
+    ev.target.value='';
+  });
+  $('clearAll').addEventListener('click',async ()=>{
+    if(!currentUser) return;
+    if(confirm('Clear all tracker data from the cloud database? Export a backup first if you want to keep it.')){
+      const [{error:errorEntries},{error:errorReflections}]=await Promise.all([
+        client.from('recovery_entries').delete().eq('user_id',currentUser.id),
+        client.from('reading_reflections').delete().eq('user_id',currentUser.id)
+      ]);
+      if(errorEntries || errorReflections){status.textContent='Could not clear all database data.';return;}
+      await loadEntries(); await loadReadingReflections(); status.textContent='All database entries and reading reflections cleared.';
+    }
+  });
+
+  $('downloadWeekly').addEventListener('click',()=>{
+    const week=recentSeven();
+    if(!week.length){ weeklyStatus.textContent='Add at least one entry first.'; return; }
+    const end=week[week.length-1].date;
+    download(`recovery-weekly-summary-${end}.txt`,buildWeeklyText(),'text/plain;charset=utf-8');
+    weeklyStatus.textContent='Weekly summary downloaded.';
+  });
+
+  $('copyWeekly').addEventListener('click', async ()=>{
+    const text=buildWeeklyText();
+    if(!entries.length){ weeklyStatus.textContent='Add at least one entry first.'; return; }
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(text); weeklyStatus.textContent='Weekly summary copied.'; return; }
+      throw new Error('clipboard unavailable');
+    } catch {
+      const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+      const ok=document.execCommand('copy'); ta.remove(); weeklyStatus.textContent=ok?'Weekly summary copied.':'Copy was unavailable; use Download weekly summary instead.';
+    }
+  });
+
+  function getLegacyEntries(){
+    try { const raw=localStorage.getItem(LEGACY_KEY); const data=raw ? JSON.parse(raw) : []; return Array.isArray(data) ? data : []; }
+    catch { return []; }
+  }
+  window.showLegacyMigration = function(){
+    const legacy=getLegacyEntries();
+    migrationCard.hidden=!legacy.length;
+    if(legacy.length) migrationText.textContent=`This device contains ${legacy.length} entr${legacy.length===1?'y':'ies'} from the earlier browser-only version. You can copy them into the cloud database.`;
+  };
+  $('importLegacy').addEventListener('click',async ()=>{
+    if(!currentUser)return;
+    const legacy=getLegacyEntries();
+    if(!legacy.length){migrationCard.hidden=true;return;}
+    migrationStatus.textContent='Importing…';
+    const {error}=await client.from('recovery_entries').upsert(legacy.map(entryToDb), {onConflict:'user_id,entry_date'});
+    if(error){migrationStatus.textContent='Import failed; the old on-device copy is still untouched.';return;}
+    await loadEntries();
+    migrationStatus.textContent=`Imported ${legacy.length} entr${legacy.length===1?'y':'ies'}. The old local copy has been left untouched as a backup.`;
+  });
+
+  if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+  render();
+})();
+</script>
+</body>
+</html>
