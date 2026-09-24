@@ -396,10 +396,12 @@ loginForm.addEventListener('submit', async (e) => {
   loginStatus.textContent = 'Checking…';
   const { data, error } = await client.auth.signInWithPassword({ email: cfg.loginEmail, password });
   passwordInput.value = '';
-  if (error || !data.user) {
-    loginStatus.textContent = 'Password not accepted. Check it and try again.';
-    return;
-  }
+ if (error || !data.user) {
+  loginStatus.textContent = error
+    ? `Login failed: ${error.message}`
+    : 'Login failed: no user was returned.';
+  return;
+ }
   currentUser = data.user;
   loginStatus.textContent = '';
   loginGate.hidden = true;
